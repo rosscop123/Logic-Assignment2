@@ -30,7 +30,6 @@ solve_task_bt(Task,Current,ClosedSet,D,RR,Cost,NewPos) :-
 	ifNotInListAddToList(Children, UpdatedOpenSet, UpdatedOpenSet1),
 	insert_sort(UpdatedOpenSet1, SortedOpenSet),
 	D1 is D+1,
-
 	solve_task_bt(Task,SortedOpenSet,ClosedSet1,D1,RR,Cost,NewPos). % backtracking search
 
 reconstruct_path(none, _R, Path) :-
@@ -75,11 +74,10 @@ elementsNotInSecondList([], _SecondList, DisjointList) :-
 	DisjointList=[].
 elementsNotInSecondList(List, SecondList, DisjointList) :-
 	List = [p(X,Y)|Remainder],
+	elementsNotInSecondList(Remainder,SecondList, DisjointList1),
 	(member(c(_F,_G,_Came_From,p(X,Y)),SecondList) -> 
-		elementsNotInSecondList(Remainder,SecondList, DisjointList1),
 		DisjointList=DisjointList1
 	; otherwise -> 
-		elementsNotInSecondList(Remainder,SecondList, DisjointList1),
 		DisjointList=[p(X,Y)|DisjointList1]).
 
 achieved(go(Exit),Current,ClosedSet,RPath,Cost,NewPos) :-
@@ -125,15 +123,11 @@ insert(X,[],[X]).
 
 heuristic_cost_estimate(Start, Task, Dist) :-
 	( Task=go(Goal) ->
-		Start = p(X0, Y0),
-		Goal = p(X1, Y1),
-		Dist is abs(X0 - X1) + abs(Y0-Y1)
+		map_distance(Start,Goal,Dist)
 	; otherwise -> Dist is 0).
-	
 
 search(F,N,N,1):-
 	map_adjacent(F,N,empty).
-
 
 %%% command shell %%%
 
