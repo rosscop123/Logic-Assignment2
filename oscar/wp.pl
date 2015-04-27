@@ -168,24 +168,16 @@ find_identity(A):-
 	findall(Person,actor(Person),People),
 	find_identity(A,0,People).
 
-find_identity(P,_,[P|[]]) :-
-	ailp_identity(I),
-	P = I.
-find_identity(_,_,[]) :- false.
+find_identity(_,_,[]) :- false.	
 find_identity(A,N,People) :-
 	N1 is N+1,
 	agent_ask_oracle(oscar,o(N1),link,L),
-	setof(P,L^(actor(P),wp(P,WT),wt_link(WT,L)),PossIDs),
-	inter(PossIDs,People,PossIDs1),
-	find_identity(A,N1,PossIDs1).
-
-% intersection of two lists
-inter([], _, []).
-inter([H1|T1], L2, [H1|Res]) :-
-    member(H1, L2),
-    inter(T1, L2, Res).
-inter([_|T1], L2, Res) :-
-    inter(T1, L2, Res).
+	findall(P,(actor(P),wp(P,WT),wt_link(WT,L)),PossIDs),
+	intersection(PossIDs,People,PossIDs1),
+	(length(P,1) ->
+		P = [A]
+	; otherwise ->
+		find_identity(A,N1,PossIDs1)).
 
 %%% Testing
 
@@ -219,3 +211,19 @@ test.
 % agent_ask_oracle(+Agent, +OID, +Question, -Answer)
 % Agent's position needs to be map_adjacent to oracle identified by OID
 %% Test query to be used: :-agent_ask_oracle(oscar,o(1),link,L). %%
+
+% agent_ask_oracle(Agent, OID, Question, Answer) :-
+% 	nonvar(Agent),
+% 	nonvar(OID),
+% 	nonvar(Question),
+% 	var(Answer),
+% 	%agent_current_position(Agent,Pos),	% ignore agent position for testing
+% 	%map_adjacent(Pos, AdjPos, OID),	% ignore agent position for testing
+% 	OID = o(_),
+% 	internal_object(OID, _AdjPos, Options),
+% 	member(question(Q)/answer(A),Options),
+% 	( Question=Q -> Answer=A ; Answer='I do not know' ).
+
+% internal_object(o(1),p(5,3),[question(link)/answer(Link)]):-
+% 	ailp_identity(A),
+% 	random_link(A,Link).
