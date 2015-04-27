@@ -167,9 +167,10 @@ random_link(A,L):-
 find_identity(A):-
 	findall(L,agent_ask_oracle(oscar,o(_),link,L),Links),
 	findall(Person,actor(Person),Persons),
-	checkPeople(Persons,Links,IDs), % [A|IDs]).
+	checkPeople(Persons,Links,IDs),
 	checkIDs(IDs,A).
 
+% checks the list of possible identities for the actual identity
 checkIDs([],_) :-
 	writeln('Identity not found.'),
 	fail.
@@ -181,6 +182,7 @@ checkIDs([P|Persons],A) :-
 	not(P == I),
 	checkIDs(Persons,A).
 
+% returns a list of possible identities
 checkPeople([],_,[]).
 checkPeople([P|Persons],Links,[P|Result]) :-
 	checkLinks(P,Links),
@@ -189,6 +191,7 @@ checkPeople([P|Persons],Links,[P|Result]) :-
 checkPeople([_|Persons],Links,Result) :-
 	checkPeople(Persons,Links,Result).
 
+% returns true if P has all the links in the list
 checkLinks(_,[]).
 checkLinks(P,[L|Links]) :-
 	findall(L1,(wp(P,WT),wt_link(WT,L1)),PL),
