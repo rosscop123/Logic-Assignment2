@@ -4,6 +4,7 @@
  *		Students edit this program to complete the assignment.
  */
 
+:-consult(wp).
 
 candidate_number(57195).
 
