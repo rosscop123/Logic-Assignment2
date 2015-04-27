@@ -165,39 +165,27 @@ random_link(A,L):-
 
 % find_identity(-A) <- find hidden identity by repeatedly calling agent_ask_oracle(oscar,o(1),link,L)
 find_identity(A):-
-	findall(L,agent_ask_oracle(oscar,o(_),link,L),Links),
-	findall(Person,actor(Person),Persons),
-	checkPeople(Persons,Links,IDs),
-	checkIDs(IDs,A).
+	findall(Person,actor(Person),People),
+	find_identity(A,0,People).
 
-% checks the list of possible identities for the actual identity
-checkIDs([],_) :-
-	writeln('Identity not found.'),
-	fail.
-checkIDs([P|_],P) :-
+find_identity(P,_,[P|[]]) :-
 	ailp_identity(I),
-	P == I.
-checkIDs([P|Persons],A) :-
-	ailp_identity(I),
-	not(P == I),
-	checkIDs(Persons,A).
+	P = I.
+find_identity(_,_,[]) :- false.
+find_identity(A,N,People) :-
+	N1 is N+1,
+	agent_ask_oracle(oscar,o(N1),link,L),
+	setof(P,L^(actor(P),wp(P,WT),wt_link(WT,L)),PossIDs),
+	inter(PossIDs,People,PossIDs1),
+	find_identity(A,N1,PossIDs1).
 
-% returns a list of possible identities
-checkPeople([],_,[]).
-checkPeople([P|Persons],Links,[P|Result]) :-
-	checkLinks(P,Links),
-	!,
-	checkPeople(Persons,Links,Result).
-checkPeople([_|Persons],Links,Result) :-
-	checkPeople(Persons,Links,Result).
-
-% returns true if P has all the links in the list
-checkLinks(_,[]).
-checkLinks(P,[L|Links]) :-
-	findall(L1,(wp(P,WT),wt_link(WT,L1)),PL),
-	(memberchk(L,PL) -> 
-		checkLinks(P,Links)
-	; false).
+% intersection of two lists
+inter([], _, []).
+inter([H1|T1], L2, [H1|Res]) :-
+    member(H1, L2),
+    inter(T1, L2, Res).
+inter([_|T1], L2, Res) :-
+    inter(T1, L2, Res).
 
 %%% Testing
 
@@ -225,3 +213,9 @@ test:-
 	; otherwise -> writeln('Wrong answer':A)
 	),fail.
 test.
+
+%% repeated from oscar_library.pl for testing purposes %%
+
+% agent_ask_oracle(+Agent, +OID, +Question, -Answer)
+% Agent's position needs to be map_adjacent to oracle identified by OID
+%% Test query to be used: :-agent_ask_oracle(oscar,o(1),link,L). %%
