@@ -8,19 +8,20 @@
 
 candidate_number(57195).
 
-
-solve_task(Task,Cost) :-
-	agent_current_position(oscar,P),
+solve_task(P,Task,Cost,Path1):-
 	heuristic_cost_estimate(P, Task, H),
 	solve_task_bt(Task,[c(H,0,none,P)],[],0,R,Cost,_NewPos),!,	% prune choice point for efficiency
 	R = [c(_F,_G,_Came_From,Exit)|_Children],
 	reconstruct_path(Exit,R,Path),
-	reverse(Path,[_Init|Path1]),
-	agent_do_moves(oscar,Path1).
+	reverse(Path,[_Init|Path1]).
 
 %% backtracking depth-first search, needs to be changed to agenda-based A*
 solve_task_bt(Task,Current,ClosedSet,Depth,RPath,[cost(Cost),depth(Depth)],NewPos) :- 
-	achieved(Task,Current,ClosedSet,RPath,Cost,NewPos).
+	achieved(Task,Current,ClosedSet,RPath,Cost,NewPos),
+	(Task = find(O) -> 
+		(agent_check_oracle(oscar,O) ->
+			false
+		; otherwise -> true)).
 solve_task_bt(Task,Current,ClosedSet,D,RR,Cost,NewPos) :-
 	Current = [c(F,G,Came_From,P)|Children],
 	ClosedSet1 = [c(F,G,Came_From,P)|ClosedSet], %Adding first node in current to ClosedSet

@@ -5,6 +5,8 @@
 :- use_module(library(http/json)).
 :- use_module(library(www_browser)).
 
+:- use_module(library/oscar_library).
+
 %%% Wikipedia stuff
 
 :- dynamic wp_cache/2.	% used to cache all Wikipedia pages fetched during one Prolog session
@@ -159,24 +161,34 @@ random_link(A,L):-
 	findall(L,(link(L),wp(A,WT),wt_link(WT,L)),Ls),
 	random_member(L,Ls).
 
-
 %%% Your solution goes here
 
 % find_identity(-A) <- find hidden identity by repeatedly calling agent_ask_oracle(oscar,o(1),link,L)
 find_identity(A):-
 	findall(Person,actor(Person),People),
-	find_identity(A,People,0).
+	find_identity(A,People).
 
-find_identity(_,[],_) :- false.	
-find_identity(A,People,N) :-
-	N1 is N+1,
-	agent_ask_oracle(oscar,o(N1),link,L),
-	findall(Person,(actor(Person),wp(Person,WT),wt_link(WT,L)),PossIDs),
-	intersection(PossIDs,People,PossIDs1),
-	(length(PossIDs1,1) ->
-		PossIDs1 = [A]
+find_identity('Identity not found',[]).
+find_identity(A,People) :-
+	agent_current_energy(oscar,Energy),
+	agent_current_position(oscar,Pos),
+	solve_task(Pos,find(o(NO)),[cost(CostO),depth(_)],PathO),
+	last(PathO,Last),
+	solve_task(Last,find(c(_)),[cost(CostC),depth(_)],_),
+	(Energy - CostO - CostC < 11 ->
+		solve_task(Pos,find(c(NC)),[cost(_),depth(_)],PathC1),
+		agent_do_moves(oscar,PathC1),
+		agent_topup_energy(oscar,c(NC)),
+		find_identity(A,People)
 	; otherwise ->
-		find_identity(A,PossIDs1,N1)).
+		agent_do_moves(oscar,PathO),
+		agent_ask_oracle(oscar,o(NO),link,L),
+		findall(Person,(actor(Person),wp(Person,WT),wt_link(WT,L)),PossIDs),
+		intersection(PossIDs,People,PossIDs1),
+		(length(PossIDs1,1) ->
+			PossIDs1 = [A]
+		; otherwise ->
+			find_identity(A,PossIDs1))).
 
 %%% Testing
 
