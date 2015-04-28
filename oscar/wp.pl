@@ -5,7 +5,6 @@
 :- use_module(library(http/json)).
 :- use_module(library(www_browser)).
 
-
 %%% Wikipedia stuff
 
 :- dynamic wp_cache/2.	% used to cache all Wikipedia pages fetched during one Prolog session
@@ -166,18 +165,18 @@ random_link(A,L):-
 % find_identity(-A) <- find hidden identity by repeatedly calling agent_ask_oracle(oscar,o(1),link,L)
 find_identity(A):-
 	findall(Person,actor(Person),People),
-	find_identity(A,0,People).
+	find_identity(A,People,0).
 
-find_identity(_,_,[]) :- false.	
-find_identity(A,N,People) :-
+find_identity(_,[],_) :- false.	
+find_identity(A,People,N) :-
 	N1 is N+1,
 	agent_ask_oracle(oscar,o(N1),link,L),
-	findall(P,(actor(P),wp(P,WT),wt_link(WT,L)),PossIDs),
+	findall(Person,(actor(Person),wp(Person,WT),wt_link(WT,L)),PossIDs),
 	intersection(PossIDs,People,PossIDs1),
-	(length(P,1) ->
-		P = [A]
+	(length(PossIDs1,1) ->
+		PossIDs1 = [A]
 	; otherwise ->
-		find_identity(A,N1,PossIDs1)).
+		find_identity(A,PossIDs1,N1)).
 
 %%% Testing
 

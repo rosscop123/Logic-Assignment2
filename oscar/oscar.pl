@@ -9,7 +9,7 @@
 candidate_number(57195).
 
 
-solve_task(Task,Cost):-
+solve_task(Task,Cost) :-
 	agent_current_position(oscar,P),
 	heuristic_cost_estimate(P, Task, H),
 	solve_task_bt(Task,[c(H,0,none,P)],[],0,R,Cost,_NewPos),!,	% prune choice point for efficiency
